@@ -1,2 +1,11 @@
+# Secrets and env
 *.secrets
 *.env
+*_env
+
+# Cache
+__pycache__/
+
+# Notebook artifacts
+*.ipynb_checkpoints
+*.ipynb

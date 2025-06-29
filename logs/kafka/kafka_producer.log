@@ -1,0 +1,1 @@
+2025-06-30 21:11:49,889 - __main__ - INFO - Produced event to topic transactions: key = transaction_id value = {"id": "test", "amount": 100, "currency": "USD", "timestamp": "2023-10-01T12:00:00Z"}

@@ -1,0 +1,23 @@
+[33m5110cea[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m Merge branch 'master' into develop
+[33maf7371a[m Merge branch 'master' into develop
+[33m4e027d4[m Add new Readme (#12)
+[33m4cb7e85[m HOMESERVER-26: Add FastAPI backend (#7)
+[33mae6edc8[m HOMESERVER-28: Add plotly-dash frontend (#6)
+[33m5aaef44[m Merge branch 'HOMESERVER-22-fix' into develop
+[33m66b93f9[m HOMESERVER-23,27,31 (#4)
+[33mbc61a7b[m Merge pull request #2 from binhminh98/HOMESERVER-22
+[33m765d34d[m[33m ([m[1;31morigin/HOMESERVER-22[m[33m, [m[1;32mHOMESERVER-22[m[33m)[m HOMESERVER-22: Add requirements.txt
+[33m3560626[m HOMESERVER-22: Add transaction data producer
+[33m1a9f85a[m HOMESERVER-22: Delete uncessary files
+[33ma4c7368[m HOMESERVER-22: Add kafka consumer
+[33m79d9086[m HOMESERVER-22: Add kafka producer
+[33m8e12f77[m HOMESERVER-22: Add Minio client connector
+[33md7b8514[m HOMESERVER-22: Add logging module
+[33mcee7678[m HOMESERVER-22: Transaction data producer
+[33m86a01f6[m HOMESERVER-22: Kafka consumer
+[33md849a44[m HOMESERVER-22: Kafka producer
+[33m5dfe67d[m HOMESERVER-22: Synthetic data generator
+[33m5317199[m HOMESERVER-22: Kafka deployment
+[33m62a90a1[m HOMESERVER-22: Add .gitignore + requirements.txt
+[33m5eb7ef4[m Merge pull request #1 from binhminh98/HOMESERVER-22
+[33m2612993[m HOMESERVER-22: Add .gitignore and producers

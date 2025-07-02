@@ -178,6 +178,7 @@ class TransactionProducer(DataProducer):
 
             # sleep(0.1)  # Simulate a delay between messages
 
+
 if __name__ == "__main__":
     transaction_producer = TransactionProducer()
     transaction_producer.produce(num_messages=100000)

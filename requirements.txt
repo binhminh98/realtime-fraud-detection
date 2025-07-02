@@ -1,0 +1,9 @@
+confluent-kafka==2.10.1
+dotenv==0.9.9
+Faker==37.4.0
+ipykernel==6.29.5
+kagglehub==0.3.12
+minio==7.2.15
+pip==24.2
+scikit-learn==1.7.0
+seaborn==0.13.2

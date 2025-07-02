@@ -3,12 +3,25 @@ Kafka consumer.
 """
 
 import os
+from pathlib import Path
 
 from confluent_kafka import Consumer
 from dotenv import load_dotenv
 
+from src.general_utils.logging import get_logger
 
-class TransactionConsumer:
+file_logger = get_logger(
+    "file_" + __name__,
+    write_to_file=True,
+    log_filepath=Path(r"logs/kafka/kafka_consumer.log"),
+)
+
+stream_logger = get_logger(
+    "stream_" + __name__,
+)
+
+
+class KafkaConsumer:
     def __init__(self):
         self.config = self._load_config()
         self.consumer = self._create_consumer()
@@ -42,10 +55,10 @@ class TransactionConsumer:
                 if msg is None:
                     continue
                 if msg.error():
-                    print(f"Error: {msg.error()}")
+                    file_logger.error(f"Error: {msg.error()}")
                     continue
 
-                print(
+                stream_logger.info(
                     f"Consumed message: {msg.value().decode('utf-8')} from topic {msg.topic()}"
                 )
         finally:
@@ -57,7 +70,7 @@ class TransactionConsumer:
 
 
 if __name__ == "__main__":
-    consumer = TransactionConsumer()
+    consumer = KafkaConsumer()
     topics = ["transactions"]
     consumer.subscribe(topics)
     consumer.consume()

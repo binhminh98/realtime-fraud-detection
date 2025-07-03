@@ -4,12 +4,13 @@ Module to produce synthetic transaction data for a Kafka topic.
 
 import datetime
 import json
+import pickle
+import random
 from abc import ABC, abstractmethod
 from time import sleep
-import random
+
 import pandas as pd
 from faker import Faker
-import pickle
 
 from src.db_connectors.kafka.producer import KafkaProducer
 from src.db_connectors.minio.minio_client import MinioClient
@@ -48,16 +49,22 @@ class TransactionProducer(DataProducer):
         self.topic = "transactions"
         self.training_data = self._get_training_data()
         self.fraud_transaction_synthesizer = self._get_synthesizer()
-        self.normal_transaction_synthesizer = self._get_synthesizer(is_fraud=False)
+        self.normal_transaction_synthesizer = self._get_synthesizer(
+            is_fraud=False
+        )
 
     def _get_synthesizer(self, is_fraud: bool = True):
         """
         Load the synthesizers from Minio.
         """
         bucket_name = "synthesizers"
-        file_name = "fraud_synthesizer.pkl" if is_fraud else "normal_synthesizer.pkl"
+        file_name = (
+            "fraud_synthesizer.pkl" if is_fraud else "normal_synthesizer.pkl"
+        )
 
-        cached_model = self.minio_client.get_file_buffer_as_bytes(bucket_name, file_name)
+        cached_model = self.minio_client.get_file_buffer_as_bytes(
+            bucket_name, file_name
+        )
 
         if cached_model:
             synthesizer = pickle.load(cached_model)
@@ -85,18 +92,26 @@ class TransactionProducer(DataProducer):
         num_normal_messages = num_messages - num_fraud_messages
 
         # Synthesizer always make multiply of 128 samples, so we sample twice to get the desired number of messages
-        normal_transactions = self.normal_transaction_synthesizer.sample(num_normal_messages)
+        normal_transactions = self.normal_transaction_synthesizer.sample(
+            num_normal_messages
+        )
         normal_transactions = normal_transactions.sample(num_normal_messages)
-        normal_transactions['Class'] = 0
+        normal_transactions["Class"] = 0
 
-        fraud_transactions = self.fraud_transaction_synthesizer.sample(num_fraud_messages).sample(num_fraud_messages)
+        fraud_transactions = self.fraud_transaction_synthesizer.sample(
+            num_fraud_messages
+        ).sample(num_fraud_messages)
         fraud_transactions = fraud_transactions.sample(num_fraud_messages)
-        fraud_transactions['Class'] = 1
+        fraud_transactions["Class"] = 1
 
-        transactions = pd.concat([normal_transactions, fraud_transactions], ignore_index=True)
+        transactions = pd.concat(
+            [normal_transactions, fraud_transactions], ignore_index=True
+        )
 
         # Make fake id
-        transactions['id'] = [self.faker.uuid4() for _ in range(len(transactions))]
+        transactions["id"] = [
+            self.faker.uuid4() for _ in range(len(transactions))
+        ]
 
         return transactions
 
@@ -110,10 +125,11 @@ class TransactionProducer(DataProducer):
             self.producer.produce(
                 self.topic,
                 key=transaction["id"],
-                value=json.dumps(transaction.to_dict())
+                value=json.dumps(transaction.to_dict()),
             )
 
             # sleep(0.01)  # Simulate a delay between messages
+
 
 if __name__ == "__main__":
     transaction_producer = TransactionProducer()

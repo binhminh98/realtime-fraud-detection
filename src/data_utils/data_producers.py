@@ -152,6 +152,7 @@ class TransactionProducer(DataProducer):
                 ),
             ],
             ignore_index=True,
+
         )
 
         # Make fake id
@@ -175,6 +176,7 @@ class TransactionProducer(DataProducer):
             )
 
             sleep(0.01)  # Simulate a delay between messages
+
 
 
 if __name__ == "__main__":

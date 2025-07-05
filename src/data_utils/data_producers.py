@@ -176,7 +176,7 @@ class TransactionProducer(DataProducer):
                 value=json.dumps(transaction.to_dict()),
             )
 
-            # sleep(0.1)  # Simulate a delay between messages
+            sleep(0.01)  # Simulate a delay between messages
 
 
 if __name__ == "__main__":

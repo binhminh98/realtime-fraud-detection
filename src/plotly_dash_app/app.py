@@ -664,13 +664,14 @@ def update_model_performance_bar_chart(_):
         bgcolor="rgba(0,0,0,0)",
     )
 
+    bar_chart.update_layout(**chart_layout)
+
     bar_chart.update_layout(
         xaxis=dict(
             tickmode="linear",
             dtick=0.2,
             range=[0, 1.02],
         ),
-        **chart_layout
     )
 
     return bar_chart

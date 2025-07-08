@@ -84,5 +84,17 @@ services:
       --serve-artifacts
       --artifacts-destination s3://mlflow
 
+  # FastAPI backend
+  fastapi_backend:
+    build: ../src/fastapi_app
+    image: fastapi
+    container_name: fastapi_backend
+    ports:
+      - "20080:80"
+    environment:
+      - MLFLOW_URI=${MLFLOW_URI}
+    command: >
+      uvicorn app:app --host 0.0.0.0 --port 80
+
 volumes:
   postgres_data:

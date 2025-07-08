@@ -61,6 +61,11 @@ class KafkaConsumer:
                 stream_logger.info(
                     f"Consumed message: {msg.value().decode('utf-8')} from topic {msg.topic()}"
                 )
+        except KeyboardInterrupt:
+            stream_logger.info(
+                "KeyboardInterrupt received. Stopping consumer gracefully."
+            )
+
         finally:
             self.close()
 

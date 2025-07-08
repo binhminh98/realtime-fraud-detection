@@ -5,6 +5,15 @@
 
 # Cache
 __pycache__/
+*cache
+*_test
+
+# Notebook artifacts
+*.ipynb_checkpoints
+*.ipynb
+
+# MLFlow artifacts
+*mlruns
 
 # Notebook artifacts
 *.ipynb_checkpoints

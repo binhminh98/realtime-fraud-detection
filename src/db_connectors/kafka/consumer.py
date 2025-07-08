@@ -65,6 +65,7 @@ class KafkaConsumer:
             stream_logger.info(
                 "KeyboardInterrupt received. Stopping consumer gracefully."
             )
+
         finally:
             self.close()
 

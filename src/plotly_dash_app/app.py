@@ -2,22 +2,15 @@ import os
 
 import dash
 import dash_bootstrap_components as dbc
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import dcc, html
 from dash.dependencies import Input, Output
+from kafka_consumer import KafkaMessageCollector
 from sklearn.metrics import classification_report, confusion_matrix
-
-from .kafka_consumer import KafkaMessageCollector
-from .styles import (
-    app_style,
-    card_style,
-    chart_layout,
-    text_in_figure_style,
-    text_style,
-    title_in_figure_style,
-)
+from styles import app_style, card_style, chart_layout, text_style
 
 # Create Kafka Consumer
 collector = KafkaMessageCollector(
@@ -33,6 +26,7 @@ collector = KafkaMessageCollector(
 # Dash App Setup
 app = dash.Dash(
     __name__,
+    title="Fraud Detection Dashboard",
     external_stylesheets=[
         dbc.themes.DARKLY,
         "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600&display=swap",
@@ -45,7 +39,7 @@ app.layout = html.Div(
         dbc.Row(
             dbc.Col(
                 html.H2(
-                    "Real-time Fraud Detection Dashboard 🥷",
+                    "Real-time Fraud Detection Dashboard 💳",
                     style=text_style,
                     className="text-center",
                 ),
@@ -76,25 +70,25 @@ app.layout = html.Div(
                 dbc.Col(
                     html.Div(
                         dcc.Graph(
-                            id="ground-truth-fraud-pie-chart",
-                        ),
-                        style=card_style,
-                    ),
-                    width=3,
-                ),
-                dbc.Col(
-                    html.Div(
-                        dcc.Graph(
-                            id="predicted-fraud-pie-chart",
-                        ),
-                        style=card_style,
-                    ),
-                    width=3,
-                ),
-                dbc.Col(
-                    html.Div(
-                        dcc.Graph(
                             id="transaction-line-chart",
+                        ),
+                        style=card_style,
+                    ),
+                    width=3,
+                ),
+                dbc.Col(
+                    html.Div(
+                        dcc.Graph(
+                            id="model-performance-bar-chart",
+                        ),
+                        style=card_style,
+                    ),
+                    width=3,
+                ),
+                dbc.Col(
+                    html.Div(
+                        dcc.Graph(
+                            id="model-confusion-matrix",
                         ),
                         style=card_style,
                     ),
@@ -117,7 +111,7 @@ app.layout = html.Div(
                 dbc.Col(
                     html.Div(
                         dcc.Graph(
-                            id="latency-line-chart",
+                            id="latency-percentile-chart",
                         ),
                         style=card_style,
                     ),
@@ -125,14 +119,14 @@ app.layout = html.Div(
                 ),
                 dbc.Col(
                     html.Div(
-                        dcc.Graph(id="model-performance-bar-chart"),
+                        dcc.Graph(id="inferences-per-second-chart"),
                         style=card_style,
                     ),
                     width=3,
                 ),
                 dbc.Col(
                     html.Div(
-                        dcc.Graph(id="model-confusion-matrix"),
+                        dcc.Graph(id="latency-histogram"),
                         style=card_style,
                     ),
                     width=3,
@@ -294,6 +288,7 @@ def update_total_transactions(_):
     ]
 
 
+# Model performance
 @app.callback(
     [
         Output("transaction-line-chart", "figure"),
@@ -302,7 +297,7 @@ def update_total_transactions(_):
     ],
     [Input("interval-component", "n_intervals")],
 )
-def update_live_chart(_):
+def update_line_chart(_):
     df = collector.get_transactions_in_buffer()
 
     if df.empty:
@@ -362,204 +357,123 @@ def update_live_chart(_):
         },
     )
 
-    line_chart.update_layout(**chart_layout)
+    # Add markers to the line
+    line_chart.update_traces(
+        mode="lines+markers",
+        hovertemplate="%{y:.2f}",
+    )
+
+    line_chart.update_layout(hovermode="x unified", **chart_layout)
 
     return line_chart, alert_message, open_fraud_alert
 
 
-@app.callback(
-    Output("ground-truth-fraud-pie-chart", "figure"),
-    [Input("interval-component", "n_intervals")],
-)
-def update_ground_truth_pie_chart(_):
-    df = collector.get_ground_truth_counts()
+# @app.callback(
+#     Output("ground-truth-fraud-pie-chart", "figure"),
+#     [Input("interval-component", "n_intervals")],
+# )
+# def update_ground_truth_pie_chart(_):
+#     df = collector.get_ground_truth_counts()
 
-    if df.empty:
-        empty_fig = go.Figure()
-        empty_fig.add_annotation(
-            text="Waiting for transactions stream!",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=20),
-            align="center",
-        )
+#     if df.empty:
+#         empty_fig = go.Figure()
+#         empty_fig.add_annotation(
+#             text="Waiting for transactions stream!",
+#             xref="paper",
+#             yref="paper",
+#             x=0.5,
+#             y=0.5,
+#             showarrow=False,
+#             font=dict(size=20),
+#             align="center",
+#         )
 
-        empty_fig.update_layout(
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
+#         empty_fig.update_layout(
+#             xaxis=dict(visible=False),
+#             yaxis=dict(visible=False),
+#             plot_bgcolor="rgba(0,0,0,0)",
+#             paper_bgcolor="rgba(0,0,0,0)",
+#         )
 
-        return empty_fig
+#         return empty_fig
 
-    pie_chart = px.pie(
-        df,
-        names="message_type",
-        values="counts",
-        title="Fraud vs Normal Messages Ratio (Ground Truth)",
-        hole=0.6,
-        color="message_type",
-        color_discrete_map={
-            "normal": "#53dfe2",
-            "fraud": "#d073f0",
-        },
-    )
+#     pie_chart = px.pie(
+#         df,
+#         names="message_type",
+#         values="counts",
+#         title="Fraud vs Normal Messages Ratio (Ground Truth)",
+#         hole=0.6,
+#         color="message_type",
+#         color_discrete_map={
+#             "normal": "#53dfe2",
+#             "fraud": "#d073f0",
+#         },
+#     )
 
-    pie_chart.update_traces(
-        pull=[0, 0.3],
-        textinfo="label+percent",
-        textposition="outside",
-        hovertemplate="%{label}: %{value} transactions (%{percent})<extra></extra>",
-    )
+#     pie_chart.update_traces(
+#         pull=[0, 0.3],
+#         textinfo="label+percent",
+#         textposition="outside",
+#         hovertemplate="%{label}: %{value} transactions (%{percent})<extra></extra>",
+#     )
 
-    pie_chart.update_layout(**chart_layout)
+#     pie_chart.update_layout(**chart_layout)
 
-    return pie_chart
-
-
-@app.callback(
-    Output("predicted-fraud-pie-chart", "figure"),
-    [Input("interval-component", "n_intervals")],
-)
-def update_predicted_fraud_pie_chart(_):
-    df = collector.get_prediction_counts()
-
-    if df.empty:
-        empty_fig = go.Figure()
-        empty_fig.add_annotation(
-            text="Waiting for transactions stream!",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=20),
-            align="center",
-        )
-
-        empty_fig.update_layout(
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-
-        return empty_fig
-
-    pie_chart = px.pie(
-        df,
-        names="message_type",
-        values="counts",
-        title="Fraud vs Normal Messages Ratio (Predicted)",
-        hole=0.6,
-        color="message_type",
-        color_discrete_map={
-            "normal": "#53dfe2",
-            "fraud": "#d073f0",
-        },
-    )
-
-    pie_chart.update_traces(
-        pull=[0, 0.3],
-        textinfo="label+percent",
-        textposition="outside",
-        hovertemplate="%{label}: %{value} transactions (%{percent})<extra></extra>",
-    )
-
-    pie_chart.update_layout(**chart_layout)
-
-    return pie_chart
+#     return pie_chart
 
 
-@app.callback(
-    Output("average-inference-latency", "children"),
-    [Input("interval-component", "n_intervals")],
-)
-def update_average_latency(_):
-    average_latency = collector.get_average_latency()
+# @app.callback(
+#     Output("predicted-fraud-pie-chart", "figure"),
+#     [Input("interval-component", "n_intervals")],
+# )
+# def update_predicted_fraud_pie_chart(_):
+#     df = collector.get_prediction_counts()
 
-    return [
-        html.Div(
-            [
-                html.H4("Average latency:", style=text_style),
-                html.H4(
-                    str(round(average_latency, 5)) + "s", style=text_style
-                ),
-            ],
-            id="average-inference-latency-children",
-            style={
-                "textAlign": "center",
-                "height": "100%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "flexDirection": "column",
-            },
-        )
-    ]
+#     if df.empty:
+#         empty_fig = go.Figure()
+#         empty_fig.add_annotation(
+#             text="Waiting for transactions stream!",
+#             xref="paper",
+#             yref="paper",
+#             x=0.5,
+#             y=0.5,
+#             showarrow=False,
+#             font=dict(size=20),
+#             align="center",
+#         )
 
+#         empty_fig.update_layout(
+#             xaxis=dict(visible=False),
+#             yaxis=dict(visible=False),
+#             plot_bgcolor="rgba(0,0,0,0)",
+#             paper_bgcolor="rgba(0,0,0,0)",
+#         )
 
-@app.callback(
-    Output("latency-line-chart", "figure"),
-    [Input("interval-component", "n_intervals")],
-)
-def update_latency_line_chart(_):
-    inference_latencies = collector.get_inference_latencies()
+#         return empty_fig
 
-    if inference_latencies.empty:
-        empty_fig = go.Figure()
-        empty_fig.add_annotation(
-            text="Waiting for transactions stream!",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=20),
-            align="center",
-        )
+#     pie_chart = px.pie(
+#         df,
+#         names="message_type",
+#         values="counts",
+#         title="Fraud vs Normal Messages Ratio (Predicted)",
+#         hole=0.6,
+#         color="message_type",
+#         color_discrete_map={
+#             "normal": "#53dfe2",
+#             "fraud": "#d073f0",
+#         },
+#     )
 
-        empty_fig.update_layout(
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
+#     pie_chart.update_traces(
+#         pull=[0, 0.3],
+#         textinfo="label+percent",
+#         textposition="outside",
+#         hovertemplate="%{label}: %{value} transactions (%{percent})<extra></extra>",
+#     )
 
-        return empty_fig
+#     pie_chart.update_layout(**chart_layout)
 
-    inference_latencies["timestamp"] = pd.to_datetime(
-        inference_latencies["timestamp"]
-    )
-
-    inference_latencies["timestamp_bin"] = inference_latencies[
-        "timestamp"
-    ].dt.floor(
-        "10s"
-    )  # bin per 10s
-
-    mean_latencies = (
-        inference_latencies.groupby(["timestamp_bin"])
-        .mean()
-        .reset_index(names="timestamp_bin")
-    )
-
-    line_chart = px.line(
-        mean_latencies,
-        x="timestamp_bin",
-        y="latency",
-        labels={"timestamp_bin": "Time", "latency": "Average Latency (s)"},
-        title="Average Inference Latency (5s intervals)",
-        color_discrete_sequence=["#53dfe2"],
-    )
-
-    line_chart.update_layout(**chart_layout)
-
-    return line_chart
+#     return pie_chart
 
 
 @app.callback(
@@ -731,5 +645,258 @@ def update_confusion_matrix(_):
     return confusion_matrix_fig
 
 
+# System performance
+@app.callback(
+    Output("average-inference-latency", "children"),
+    [Input("interval-component", "n_intervals")],
+)
+def update_average_latency(_):
+    average_latency = collector.get_average_latency()
+
+    return [
+        html.Div(
+            [
+                html.H4("Average latency:", style=text_style),
+                html.H4(
+                    str(round(average_latency, 5)) + "s", style=text_style
+                ),
+            ],
+            id="average-inference-latency-children",
+            style={
+                "textAlign": "center",
+                "height": "100%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "flexDirection": "column",
+            },
+        )
+    ]
+
+
+@app.callback(
+    Output("latency-percentile-chart", "figure"),
+    [Input("interval-component", "n_intervals")],
+)
+def update_latency_percentile_chart(_):
+    inference_latencies = collector.get_inference_latencies()
+
+    if inference_latencies.empty:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(
+            text="Waiting for transactions stream!",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=20),
+            align="center",
+        )
+
+        empty_fig.update_layout(
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+
+        return empty_fig
+
+    inference_latencies["timestamp_bin"] = inference_latencies[
+        "timestamp"
+    ].dt.floor(
+        "10s"
+    )  # bin per 10s
+
+    latencies_percentile_by_timestamp = (
+        inference_latencies.groupby(["timestamp_bin"])["latency"]
+        .agg(
+            p50=lambda x: np.percentile(x * 1000, 50),
+            p90=lambda x: np.percentile(x * 1000, 90),
+            p95=lambda x: np.percentile(x * 1000, 95),
+            p99=lambda x: np.percentile(x * 1000, 99),
+        )
+        .reset_index(names="timestamp_bin")
+    )
+
+    # Create figure with 4 lines
+    line_chart = go.Figure()
+
+    line_chart.add_trace(
+        go.Scatter(
+            x=latencies_percentile_by_timestamp["timestamp_bin"],
+            y=latencies_percentile_by_timestamp["p50"],
+            mode="lines+markers",
+            name="P50",
+            line=dict(shape="spline"),
+            hovertemplate="%{y} ms",
+        )
+    )
+    line_chart.add_trace(
+        go.Scatter(
+            x=latencies_percentile_by_timestamp["timestamp_bin"],
+            y=latencies_percentile_by_timestamp["p90"],
+            mode="lines+markers",
+            name="P90",
+            line=dict(shape="spline"),
+            hovertemplate="%{y} ms",
+        )
+    )
+    line_chart.add_trace(
+        go.Scatter(
+            x=latencies_percentile_by_timestamp["timestamp_bin"],
+            y=latencies_percentile_by_timestamp["p95"],
+            mode="lines+markers",
+            name="P95",
+            line=dict(shape="spline"),
+            hovertemplate="%{y} ms",
+        )
+    )
+    line_chart.add_trace(
+        go.Scatter(
+            x=latencies_percentile_by_timestamp["timestamp_bin"],
+            y=latencies_percentile_by_timestamp["p99"],
+            mode="lines+markers",
+            name="P99",
+            line=dict(shape="spline"),
+            hovertemplate="%{y} ms",
+        )
+    )
+
+    # Enable vertical hover line
+    line_chart.update_layout(
+        hovermode="x unified",
+        hoverdistance=100,  # sensitivity of hover
+        spikedistance=1000,
+        xaxis=dict(
+            title="Time",
+            showspikes=True,
+            spikecolor="grey",
+            spikesnap="cursor",
+            spikemode="across",
+            showline=True,
+        ),
+        yaxis=dict(title="Latency (ms)"),
+        title="Latency Percentiles (5s intervals)",
+    )
+
+    line_chart.update_layout(**chart_layout)
+
+    return line_chart
+
+
+@app.callback(
+    Output("inferences-per-second-chart", "figure"),
+    [Input("interval-component", "n_intervals")],
+)
+def update_inferences_per_second_chart(_):
+    inference_latencies = collector.get_inference_latencies()
+
+    if inference_latencies.empty:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(
+            text="Waiting for transactions stream!",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=20),
+            align="center",
+        )
+
+        empty_fig.update_layout(
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+
+        return empty_fig
+
+    inference_latencies["timestamp_bin"] = inference_latencies[
+        "timestamp"
+    ].dt.floor(
+        "10s"
+    )  # bin per 10s
+
+    inferences_per_second_by_timestamp = (
+        inference_latencies.groupby(["timestamp_bin"])["latency"]
+        .agg(
+            ips=lambda x: len(x) / sum(x),
+        )
+        .reset_index(names="timestamp_bin")
+    )
+
+    line_chart = px.line(
+        inferences_per_second_by_timestamp,
+        x="timestamp_bin",
+        y="ips",
+        labels={
+            "timestamp_bin": "Time",
+            "ips": "Inferences Per Second (IPS)",
+        },
+        title="Inferences Per Second (5s intervals)",
+        color_discrete_sequence=["#53dfe2"],
+    )
+
+    # Add markers to the line
+    line_chart.update_traces(
+        mode="lines+markers",
+        hovertemplate="%{y}",
+    )
+
+    line_chart.update_layout(hovermode="x unified", **chart_layout)
+
+    return line_chart
+
+
+@app.callback(
+    Output("latency-histogram", "figure"),
+    [Input("interval-component", "n_intervals")],
+)
+def update_latency_histogram(_):
+    inference_latencies = collector.get_inference_latencies()
+
+    if inference_latencies.empty:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(
+            text="Waiting for transactions stream!",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=20),
+            align="center",
+        )
+
+        empty_fig.update_layout(
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+
+        return empty_fig
+
+    inference_latencies["timestamp"] = pd.to_datetime(
+        inference_latencies["timestamp"]
+    )
+
+    histogram = px.histogram(
+        x=inference_latencies["latency"] * 1000,
+        nbins=20,
+        labels={"x": "Latency (ms)", "y": "Count"},
+        title="Inference Latency Histogram",
+        color_discrete_sequence=["#53dfe2"],
+    )
+
+    histogram.update_layout(**chart_layout)
+
+    return histogram
+
+
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=28050)
+    app.run(debug=False, host="0.0.0.0", port=8050)

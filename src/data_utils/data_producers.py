@@ -51,7 +51,6 @@ class TransactionProducer(DataProducer):
         self.fraud_transaction_synthesizer = self._get_synthesizer()
 
     def _get_synthesizer(self):
-
         """
         Load the synthesizers from Minio.
         """

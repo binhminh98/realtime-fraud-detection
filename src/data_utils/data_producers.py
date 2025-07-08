@@ -152,7 +152,6 @@ class TransactionProducer(DataProducer):
                 ),
             ],
             ignore_index=True,
-
         )
 
         # Make fake id
@@ -160,13 +159,15 @@ class TransactionProducer(DataProducer):
             self.faker.uuid4() for _ in range(len(transactions))
         ]
 
-        return transactions
+        return transactions.sample(frac=1)  # Shuffle so that fraud is random
 
     def produce(self, num_messages: int):
         """
         Produce messages to the specified Kafka topic.
         """
-        transactions = self._generate_synthetic_data(num_messages)
+        transactions = self._generate_synthetic_data(num_messages).sample(
+            frac=1
+        )
 
         for i, transaction in transactions.iterrows():
             self.producer.produce(
@@ -175,8 +176,7 @@ class TransactionProducer(DataProducer):
                 value=json.dumps(transaction.to_dict()),
             )
 
-            sleep(0.01)  # Simulate a delay between messages
-
+            # sleep(0.1)  # Simulate a delay between messages
 
 
 if __name__ == "__main__":

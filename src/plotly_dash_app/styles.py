@@ -45,9 +45,11 @@ chart_layout = dict(
     title_x=0.5,
     xaxis=dict(
         showgrid=False,
+        rangemode="tozero",
     ),
     yaxis=dict(
         showgrid=True,
+        rangemode="tozero",
         gridcolor="rgba(200, 200, 200, 0.1)",
         zerolinecolor="rgba(200, 200, 200, 0.15)",
         linecolor="rgba(255,255,255,0.5)",

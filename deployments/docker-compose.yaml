@@ -96,5 +96,18 @@ services:
     command: >
       uvicorn app:app --host 0.0.0.0 --port 80
 
+  # Plotly Dash UI
+  plotly_dash_ui:
+    build: ../src/plotly_dash_app
+    image: plotly_dash_app
+    container_name: plotly_dash_ui
+    ports:
+      - "28050:8050"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - FASTAPI_URI=${FASTAPI_URI}
+    command: >
+      python app.py
+
 volumes:
   postgres_data:

@@ -51,6 +51,7 @@ class TransactionProducer(DataProducer):
         self.fraud_transaction_synthesizer = self._get_synthesizer()
 
     def _get_synthesizer(self):
+
         """
         Load the synthesizers from Minio.
         """
@@ -177,7 +178,6 @@ class TransactionProducer(DataProducer):
             )
 
             # sleep(0.1)  # Simulate a delay between messages
-
 
 if __name__ == "__main__":
     transaction_producer = TransactionProducer()

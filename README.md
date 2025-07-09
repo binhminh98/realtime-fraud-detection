@@ -8,6 +8,8 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 ## 🛠️ Tech Stack
 
+![System Design](images/realtime_fraud_detection.png "System design")
+
 - **Kafka**: Real-time transaction data simulation via producer/consumer pattern.
 - **Python**:
   - Synthetic data generation using `Conditional WGAN-GP`
@@ -20,13 +22,12 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 - **Docker**: Easy environment setup and deployment.
 - **Airflow** *(To-do)*: Automated model retraining pipeline.
 
-![System Design](images/realtime_fraud_detection.png "System design")
-
 ---
 
 ## 🧪 Dataset Setup
 
-- The dataset is split into: `train`, `validation`, `test`.
+- Original dataset taken from Kaggle famous credit card transactions dataset: [Credit Card Fraud Detection](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) with total **284,807 transactions**, 492 of which are frauds (about **0.172%**)
+- The dataset is split into: `train`, `validation`, `test` (60%/20%/20%).
 - **Classifier**: Trained on `train` set, evaluated on `test` set.
 - **Synthesizer**: Trained only on the `validation` set (to avoid data leakage).
 
@@ -43,7 +44,6 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 - WGAN-GP struggles on **small datasets** (overfits easily).
 - Even with SMOTE-upsampled data, it generates synthetic samples that are **too easy to separate**, leading to unreliable classifiers.
-- **Needs scaled input** → `MinMaxScaler` is used for better performance.
 - Recommended: **SMOTE with 10% more fraud data** (vs. full oversampling) to reduce overfit.
 
 ---
@@ -54,10 +54,11 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 **Two separate WGAN-GP models** for normal and fraud data:
 
 - Trained on:  
-  1. All data  
-  2. Only validation data  
+  - All data  
+  - Only validation data  
 
 - ❌ Issue: Classifier achieved **perfect metrics (100%)**, indicating:
+  - **Data leakage** when training on all data.
   - Synthetic data is **too clean/separable**.
   - Models produce **non-overlapping distributions** for each class.
 
@@ -67,9 +68,9 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 - Trained only on **validation set**
 - Observations:
   - SMOTE with large fraud ratio → **skewed distribution**
-  - SMOTE with **10% fraud** seems more reasonable → but **distribution drift**
+  - SMOTE with **10% fraud** seems more reasonable → but encounter **distribution drift**
 
-### **Third/Last Experiment**:  
+### **Third/Last Experiment**:
 **WGAN-GP** for only fraud transactions:
 
 - Trained only on **validation set**
@@ -77,6 +78,8 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
   - SMOTE with **10% fraud** seems more reasonable -> data looks reasonable on TSNE plot.
 
 ![Fraud vs real transactions](images/synthetic_vs_real_fraud.png "Fraud vs real transactions")
+
+-> Generates a synthetic dataset composed of normal transactions from the validation set, along with 0.1–0.2% fraudulent transactions — 60% of which are synthesized, and the remaining 40% sourced directly from the validation set.
 
 ---
 
@@ -94,3 +97,37 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 | `DecisionTree`     | Baseline – underperformed |
 | `RandomForest`     | Bagging approach – slower training, decent performance |
 | `XGBoost` / `CatBoost` / `LightGBM` | Boosting models – fast, regularized, auto feature selection |
+
+### Results:
+- Models that uses SMOTE to upsample fraud transactions and trained on performs better for the positive class than non-SMOTE:
+
+- SMOTE:
+![With SMOTE](images/with_smote.png "With SMOTE")
+
+- Non-SMOTE:
+![Without SMOTE](images/without_smote.png "Without SMOTE")
+
+- **XGBoost** achieved the highest F1 score of approximately 0.79 on the positive class. And also, the training time is relatively quick, comparing to the others -> and therefore **XGBoost** was selected for fine-tuning.:
+![Training time](images/training_time.png "Training time")
+
+- Final model fine-tuned results:
+![Fine tuning results](images/fine_tuned.png "Fine tuning results")
+
+-> Fine tuning doesn't improve much model performance, however it will be used as the final model.
+
+### ✅ Test Run Summary
+![Monitoring dashboard](images/monitoring_dashboard.png "Monitoring dashboard")
+
+**100,000 transactions** streamed to the Kafka server.
+
+- **Positive F1 Score:** ~0.83 → Model performs well on real-time streaming data.
+- **Positive Precision:** Relatively low, which is expected as the model is designed to be conservative with fraud predictions.
+- **Confusion Matrix:** Indicates good overall classification performance.
+- **Latencies:**  
+  - p50: 12.9 ms  
+  - p90: 14.8 ms  
+  - p95: 18.4 ms  
+  - p99: 60 ms  
+- **Throughput:**  
+  - Average: **65 inferences/sec**  
+  - Average Latency: **14.46 ms**

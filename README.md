@@ -15,10 +15,12 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
   - Plotly Dash for UI and model monitoring
   - ML classifiers: baseline `DecisionTree` ➔ `Bagging (RandomForest)` ➔ `Boosting (XGBoost, CatBoost, LightGBM)`
 - **MLFlow**: Model logging and performance monitoring.
-- **Docker**: Easy environment setup and deployment.
+- **MinIO**: S3-compatible storage for MLFlow artifacts (models, environments, etc.).
 - **PostgreSQL**: Backend for MLflow metadata.
-- **MinIO**: S3-compatible storage for ML artifacts (models, environments, etc.).
+- **Docker**: Easy environment setup and deployment.
 - **Airflow** *(To-do)*: Automated model retraining pipeline.
+
+![System Design](images/realtime_fraud_detection.png "System design")
 
 ---
 
@@ -48,7 +50,7 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 ## 🔬 Experiments with Synthesizer
 
-### ✅ **First Experiment**:  
+### **First Experiment**:  
 **Two separate WGAN-GP models** for normal and fraud data:
 
 - Trained on:  
@@ -59,15 +61,22 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
   - Synthetic data is **too clean/separable**.
   - Models produce **non-overlapping distributions** for each class.
 
----
-
-### ✅ **Second Experiment**:  
+### **Second Experiment**:  
 **Conditional WGAN-GP** for both classes:
 
 - Trained only on **validation set**
 - Observations:
   - SMOTE with large fraud ratio → **skewed distribution**
-  - SMOTE with **10% fraud** seems more reasonable → **still under evaluation**
+  - SMOTE with **10% fraud** seems more reasonable → but **distribution drift**
+
+### **Third/Last Experiment**:  
+**WGAN-GP** for only fraud transactions:
+
+- Trained only on **validation set**
+- Observations:
+  - SMOTE with **10% fraud** seems more reasonable -> data looks reasonable on TSNE plot.
+
+![Fraud vs real transactions](images/synthetic_vs_real_fraud.png "Fraud vs real transactions")
 
 ---
 
@@ -85,47 +94,3 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 | `DecisionTree`     | Baseline – underperformed |
 | `RandomForest`     | Bagging approach – slower training, decent performance |
 | `XGBoost` / `CatBoost` / `LightGBM` | Boosting models – fast, regularized, auto feature selection |
-
-### Evaluation Strategy:
-
-- **Round 1**: On original imbalanced data  
-- **Round 2**: On SMOTE-upsampled data  
-  - Result: Best F1 for fraud class ≈ **0.78 (XGBoost)**
-- **Fine-tuning** led to slight improvements.
-
----
-
-## 🔪 Experiments Summary
-
-### 🔪 **First Attempt**:
-- Train/test split on all data.
-- Synthesizer trained on same data.
-- ❌ Result: **Data leakage** → **perfect scores**
-
----
-
-### 🔪 **Second Attempt**:
-- Train/test split as before.
-- Synthesizer trained **only on test set**.
-- ❌ Still overfitting: synthetic data too recognizable → perfect classifier scores
-
----
-
-### 🔪 **Third Attempt**:
-- Proper `train/val/test` split.
-- Synthesizer trained on `val`, classifiers trained on `train` and tested on `test`.
-- ✅ Most reasonable setup.
-- ❌ However:  
-  - **Distribution mismatch** between synthetic and real test data  
-  - Many **false positives**, classifiers perform poorly → **still under testing**
-
----
-
-## 📊 Conclusion
-
-- SMOTE helps but may cause classifier overfit in fraud detection.
-- Conditional WGAN-GP has potential but needs careful tuning and **distribution matching**.
-- Real-time fraud detection needs **realistic synthetic data** to generalize well.
-- Next step: Integrate **Airflow** for retraining pipeline.
-
----

@@ -115,6 +115,8 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 -> Fine tuning doesn't improve much model performance, however it will be used as the final model.
 
+---
+
 ### ✅ Test Run Summary
 ![Monitoring dashboard](images/monitoring_dashboard.png "Monitoring dashboard")
 
@@ -131,3 +133,10 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 - **Throughput:**  
   - Average: **65 inferences/sec**  
   - Average Latency: **14.46 ms**
+
+---
+
+### 🛠️ To-Do
+
+- [ ] Integrate **Apache Spark** for parallel data processing and improved scalability  
+- [ ] Set up **Apache Airflow** to automate model retraining and periodic evaluation  

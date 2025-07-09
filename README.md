@@ -136,7 +136,7 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 ---
 
-### 🛠️ To-Dos
+### 🛠️ To-Do
 
 - [ ] Integrate **Apache Spark** for parallel data processing and improved scalability  
 - [ ] Set up **Apache Airflow** to automate model retraining and periodic evaluation  

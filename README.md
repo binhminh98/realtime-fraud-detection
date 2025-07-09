@@ -107,7 +107,7 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 - Non-SMOTE:
 ![Without SMOTE](images/without_smote.png "Without SMOTE")
 
-- **XGBoost** achieved the highest F1 score of approximately 0.79 on the positive class. And also, the training time is relatively quick, comparing to the others -> and therefore **XGBoost** was selected for fine-tuning.:
+- **XGBoost** achieved the highest F1 score of approximately 0.79 on the positive class. And also, the training time is relatively quick, comparing to the others -> and therefore **XGBoost** was selected for fine-tuning:
 ![Training time](images/training_time.png "Training time")
 
 - Final model fine-tuned results:
@@ -120,8 +120,8 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 **100,000 transactions** streamed to the Kafka server.
 
-- **Positive F1 Score:** ~0.83 → Model performs well on real-time streaming data.
-- **Positive Precision:** Relatively low, which is expected as the model is designed to be conservative with fraud predictions.
+- **Positive F1 Score: ~ 0.83** → Model performs well on real-time streaming data.
+- **Positive Precision: ~ 0.74** Relatively low , which is expected as the model is designed to be conservative with fraud predictions.
 - **Confusion Matrix:** Indicates good overall classification performance.
 - **Latencies:**  
   - p50: 12.9 ms  

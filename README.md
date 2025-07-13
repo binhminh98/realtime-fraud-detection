@@ -138,5 +138,30 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 
 ### 🛠️ To-Dos
 
-- [ ] Integrate **Apache Spark** for parallel data processing and improved scalability  
-- [ ] Set up **Apache Airflow** to automate model retraining and periodic evaluation  
+- [ ] Integrate **Apache Spark** for parallel data processing and improved scalability
+- [ ] Set up **Apache Airflow** to automate model retraining and periodic evaluation
+
+---
+
+### 🗂️ Project Structure
+realtime-fraud-detection
+├── deployments # Docker deployment stacks
+├── images # Github assets
+├── src
+│ ├── fastapi_app # Backend application (FastAPI)
+│ │ ├── data_utils # Transactions producer utilities
+│ │ ├── db_connectors # Utilities for database connections
+│ │ ├── endpoints # FastAPI route definitions
+│ │ ├── services # Interfaces for backend business logic called by endpoints
+│ │ ├── utils # Core application logic called by endpoints
+│ │ ├── general_utils # Miscellaneous utility modules
+│ │ ├── models # Pydantic data models
+│ │ ├── Dockerfile # Dockerfile for backend deployment
+│ │ └── requirements.txt # Backend-specific dependencies
+│ └── plotly_dash_app # Frontend application (Plotly Dash)
+│ ├── app.py # Dash app entrypoint
+│ ├── kafka_consumer.py # Kafka consumer integration
+│ ├── styles.py # CSS styling and theming
+│ ├── general_utils # Miscellaneous frontend utilities
+│ ├── Dockerfile # Dockerfile for frontend deployment
+│ └── requirements.txt # Frontend-specific dependencies

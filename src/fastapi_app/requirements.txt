@@ -1,4 +1,17 @@
+# FastAPI backend
 fastapi==0.115.14
 uvicorn==0.35.0
 mlflow==2.22.1
 xgboost==3.0.2
+python-dotenv==1.1.1
+Faker==37.4.0
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.6.1
+ydata-synthetic==1.4.0
+
+# Kafka producer
+confluent-kafka==2.10.1
+
+# MinIO
+minio==7.2.15

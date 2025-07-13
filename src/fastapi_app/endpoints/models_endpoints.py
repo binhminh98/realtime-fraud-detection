@@ -6,8 +6,6 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from services.models_services import ModelServices
 
-from models.models import ModelInfo
-
 router = APIRouter()
 
 router = APIRouter(
@@ -17,7 +15,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_model_names() -> list | None:
+async def get_model_names() -> JSONResponse:
     try:
         response = ModelServices.get_model_names()
 
@@ -39,7 +37,7 @@ async def get_model_names() -> list | None:
 
 
 @router.get("/champion")
-async def get_champion_model() -> ModelInfo:
+async def get_champion_model() -> JSONResponse:
     try:
         response = ModelServices.get_champion_model_info()
 
@@ -61,7 +59,7 @@ async def get_champion_model() -> ModelInfo:
 
 
 @router.get("/{model_name}")
-async def get_model_info_by_name(model_name: str) -> ModelInfo:
+async def get_model_info_by_name(model_name: str) -> JSONResponse:
     try:
         response = ModelServices.get_model_info_by_name(model_name)
 

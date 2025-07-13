@@ -6,7 +6,7 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from services.inference_services import InferenceServices
 
-from models.models import Transaction, TransactionPrediction
+from models.models import Transaction
 
 router = APIRouter()
 
@@ -17,9 +17,9 @@ router = APIRouter(
 
 
 @router.post("/")
-async def inference(item: Transaction) -> TransactionPrediction:
+async def inference(transaction: Transaction) -> JSONResponse:
     try:
-        response = InferenceServices.inference(item.model_dump())
+        response = InferenceServices.inference(transaction.model_dump())
 
         if response:
             return JSONResponse(

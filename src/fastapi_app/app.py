@@ -4,11 +4,13 @@ Main app backend module for FastAPI app.
 
 from endpoints.inference_endpoints import router as inference_router
 from endpoints.models_endpoints import router as model_router
+from endpoints.producer_endpoints import router as producer_router
 from fastapi import FastAPI
 
 app = FastAPI()
 app.include_router(model_router)
 app.include_router(inference_router)
+app.include_router(producer_router)
 
 
 @app.get("/")

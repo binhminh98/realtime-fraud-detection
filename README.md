@@ -144,6 +144,7 @@ This project implements a **real-time fraud detection pipeline** using a Kafka-b
 ---
 
 ### 🗂️ Project Structure
+```
 realtime-fraud-detection
 ├── deployments # Docker deployment stacks
 ├── images # Github assets
@@ -165,3 +166,4 @@ realtime-fraud-detection
 │ ├── general_utils # Miscellaneous frontend utilities
 │ ├── Dockerfile # Dockerfile for frontend deployment
 │ └── requirements.txt # Frontend-specific dependencies
+```

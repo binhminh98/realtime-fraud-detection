@@ -6,11 +6,19 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
 from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from kafka_consumer import KafkaMessageCollector
 from sklearn.metrics import classification_report, confusion_matrix
-from styles import app_style, card_style, chart_layout, text_style
+from styles import (
+    app_style,
+    card_style,
+    chart_layout,
+    input_field,
+    purple_button,
+    text_style,
+)
 
 # Create Kafka Consumer
 collector = KafkaMessageCollector(
@@ -52,13 +60,13 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     [
-                        dbc.Col(
+                        dbc.Row(
                             html.Div(
                                 id="total-transaction",
                                 style=card_style,
                             ),
                         ),
-                        dbc.Col(
+                        dbc.Row(
                             html.Div(
                                 id="predicted-transaction",
                                 style=card_style,
@@ -102,10 +110,44 @@ app.layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(
-                    html.Div(
-                        id="average-inference-latency",
-                        style=card_style,
-                    ),
+                    [
+                        dbc.Row(
+                            html.Div(
+                                id="average-inference-latency",
+                                style=card_style,
+                            ),
+                        ),
+                        dbc.Row(
+                            html.Div(
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            dcc.Input(
+                                                id="produce-transaction-num-messages",
+                                                type="number",
+                                                placeholder="Enter an integer",
+                                                debounce=True,
+                                                step=1,
+                                                style=input_field,
+                                            ),
+                                            width=6,
+                                        ),
+                                        dbc.Col(
+                                            html.Button(
+                                                "Produce Transactions",
+                                                id="produce-transaction-button",
+                                                n_clicks=0,
+                                                style=purple_button,
+                                            ),
+                                            width=6,
+                                        ),
+                                    ],
+                                    id="transactions-producer",
+                                ),
+                                style=card_style,
+                            ),
+                        ),
+                    ],
                     width=2,
                 ),
                 dbc.Col(
@@ -153,9 +195,51 @@ app.layout = html.Div(
                 "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
             },
         ),
+        dbc.Alert(
+            id="transactions-producer-alert",
+            is_open=False,
+            dismissable=True,
+            style={
+                "position": "fixed",
+                "top": "20px",
+                "left": "20px",
+                "width": "300px",
+                "zIndex": 1050,
+                "boxShadow": "0 4px 12px rgba(0,0,0,0.15)",
+            },
+        ),
     ],
     style=app_style,
 )
+
+
+@app.callback(
+    [
+        Output("transactions-producer-alert", "children"),
+        Output("transactions-producer-alert", "is_open"),
+        Output("transactions-producer-alert", "color"),
+    ],
+    Input("produce-transaction-button", "n_clicks"),
+    State("produce-transaction-num-messages", "value"),
+)
+def produce_transations(n_clicks, value):
+    if n_clicks > 0:
+        if value is None:
+            return "Please enter a valid number!", True, "danger"
+
+        try:
+            int_value = int(value)
+            response = requests.post(
+                f"{os.getenv('FASTAPI_URI')}/producers/produce_transactions/{int_value}",
+            )
+
+            return eval(response.text), True, "success"
+
+        except (ValueError, TypeError):
+            return "Invalid input! Please enter an integer.", True, "danger"
+
+    else:
+        return [dash.no_update] * 3
 
 
 @app.callback(
@@ -639,7 +723,7 @@ def update_confusion_matrix(_):
         xaxis_title="Predicted Label",
         yaxis_title="True Label",
         yaxis_autorange="reversed",
-        **chart_layout
+        **chart_layout,
     )
 
     return confusion_matrix_fig

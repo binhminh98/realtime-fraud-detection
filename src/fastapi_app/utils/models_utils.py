@@ -2,16 +2,20 @@
 Module to specify backend logic for the services for fraud detection ML models.
 """
 
-import logging
 import os
+from pathlib import Path
 
 import mlflow
+from general_utils.logging import get_logger
 
-logger = logging.getLogger(__name__)
+file_logger = get_logger(
+    "file_" + __name__,
+    write_to_file=True,
+    log_filepath=Path(r"logs/backend/models_endpoints.log"),
+)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+stream_logger = get_logger(
+    "stream_" + __name__,
 )
 
 mlflow_client = mlflow.MlflowClient(os.getenv("MLFLOW_URI"))
@@ -38,12 +42,15 @@ class ModelUtils:
                     name=model_name, alias="champion"
                 )
 
-                logger.info(
+                stream_logger.info(
                     f"Champion found: model={model_name}, version={int(version.version)}"
                 )
 
                 break
-            except Exception:
+            except Exception as e:
+                file_logger.error(
+                    f"Error when getting champion model: {str(e)}"
+                )
                 continue
 
         if version:
@@ -148,4 +155,7 @@ class ModelUtils:
             return model_info
 
         except Exception as e:
+            file_logger.error(
+                f"Error when getting model info by name: {str(e)}"
+            )
             return None

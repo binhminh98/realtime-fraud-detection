@@ -60,3 +60,8 @@ class Transaction(BaseModel):
 class TransactionPrediction(Transaction):
 
     is_fraud: int
+
+
+class TransactionProducerModel(BaseModel):
+
+    num_messages: int

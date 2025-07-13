@@ -56,3 +56,31 @@ chart_layout = dict(
         tickfont=dict(color="white"),
     ),
 )
+
+purple_button = {
+    "backgroundColor": "#7B68EE",
+    "color": "white",
+    "border": "1px solid rgba(255,255,255,0.3)",
+    "padding": "10px 20px",
+    "borderRadius": "50px",
+    "fontWeight": "bold",
+    "boxShadow": "0 0 12px rgba(0, 191, 255, 0.2)",
+    "cursor": "pointer",
+    "transition": "0.3s",
+    "fontFamily": "Nunito",
+    "fontSize": "13px",
+    "width": "100%",
+}
+
+input_field = {
+    "backgroundColor": "#181c30",
+    "color": "white",
+    "border": "2px solid #9D4EDD",
+    "borderRadius": "12px",
+    "padding": "10px 15px",
+    "fontSize": "16px",
+    "fontFamily": "Nunito",
+    "outline": "none",
+    "boxShadow": "0 0 8px rgba(157, 78, 221, 0.4)",
+    "width": "100%",
+}

@@ -7,8 +7,7 @@ from pathlib import Path
 
 from confluent_kafka import Producer
 from dotenv import load_dotenv
-
-from src.general_utils.logging import get_logger
+from general_utils.logging import get_logger
 
 file_logger = get_logger(
     "file_" + __name__,

@@ -10,10 +10,9 @@ from math import ceil
 from time import sleep
 
 import pandas as pd
+from db_connectors.kafka.producer import KafkaProducer
+from db_connectors.minio.minio_client import MinioClient
 from faker import Faker
-
-from src.db_connectors.kafka.producer import KafkaProducer
-from src.db_connectors.minio.minio_client import MinioClient
 
 
 class DataProducer(ABC):
@@ -23,6 +22,9 @@ class DataProducer(ABC):
 
     def __init__(self):
         self.faker = Faker()
+        self.producer = KafkaProducer()
+        self.minio_client = MinioClient()
+        self.topic = None
 
     @abstractmethod
     def _generate_synthetic_data(self, num_messages) -> pd.DataFrame:
@@ -44,8 +46,6 @@ class TransactionProducer(DataProducer):
 
     def __init__(self):
         super().__init__()
-        self.producer = KafkaProducer()
-        self.minio_client = MinioClient()
         self.topic = "transactions"
         self.real_fraud_data = self._get_real_fraud_data()
         self.fraud_transaction_synthesizer = self._get_synthesizer()
@@ -177,6 +177,7 @@ class TransactionProducer(DataProducer):
             )
 
             # sleep(0.1)  # Simulate a delay between messages
+
 
 if __name__ == "__main__":
     transaction_producer = TransactionProducer()

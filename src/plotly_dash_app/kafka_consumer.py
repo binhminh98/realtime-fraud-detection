@@ -38,7 +38,7 @@ class KafkaMessageCollector:
                 start = time.time()
 
                 inference_result = requests.post(
-                    f"{self.fastapi_url}/inference/inference",
+                    f"{self.fastapi_url}/inference",
                     json=message,
                     timeout=2.0,
                 ).json()

@@ -8,9 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 from dotenv import load_dotenv
+from general_utils.logging import get_logger
 from minio import Minio
-
-from src.general_utils.logging import get_logger
 
 load_dotenv(override=True)
 
@@ -131,7 +130,7 @@ class MinioClient:
 
             # For large files
             chunk_size = 40960
-            csv_bytes = b''.join(response.stream(chunk_size))
+            csv_bytes = b"".join(response.stream(chunk_size))
             csv_buffer = BytesIO(csv_bytes)
 
             stream_logger.info(
@@ -147,16 +146,18 @@ class MinioClient:
             stream_logger.error(f"Failed to get CSV data: {e}")
             return None
 
-    def get_file_buffer_as_bytes(self, bucket_name, file_name) -> BytesIO | None:
+    def get_file_buffer_as_bytes(
+        self, bucket_name, file_name
+    ) -> BytesIO | None:
         """
         Get a file from the specified MinIO bucket as a BytesIO object.
         """
         try:
             response = self.minio_client.get_object(bucket_name, file_name)
-        
+
             # For large files
             chunk_size = 8192
-            file_bytes = b''.join(response.stream(chunk_size))
+            file_bytes = b"".join(response.stream(chunk_size))
             file_buffer = BytesIO(file_bytes)
 
             stream_logger.info(
@@ -172,6 +173,7 @@ class MinioClient:
             stream_logger.error(f"Failed to get file buffer: {e}")
 
             return None
+
 
 if __name__ == "__main__":
     # import kagglehub

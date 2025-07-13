@@ -22,6 +22,8 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: ${KAFKA_CONTROLLER_LISTENER_NAMES}
       KAFKA_LOG_DIRS: ${KAFKA_LOG_DIRS}
       CLUSTER_ID: ${CLUSTER_ID}
+    networks:
+      - kafka_default
 
   kafka-ui:
     container_name: kafka-ui
@@ -73,10 +75,10 @@ services:
     ports:
       - "25000:5000"
     environment:
-      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
-      - MLFLOW_S3_ENDPOINT_URL=${MINIO_ENDPOINT}
-      - MLFLOW_S3_IGNORE_TLS=true
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+      MLFLOW_S3_ENDPOINT_URL: ${MINIO_ENDPOINT}
+      MLFLOW_S3_IGNORE_TLS: true
     command: >
       mlflow server
       --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/mlflow
@@ -87,12 +89,18 @@ services:
   # FastAPI backend
   fastapi_backend:
     build: ../src/fastapi_app
-    image: fastapi
+    image: fastapi:latest
     container_name: fastapi_backend
     ports:
       - "20080:80"
     environment:
-      - MLFLOW_URI=${MLFLOW_URI}
+      KAFKA_BOOTSTRAP_SERVERS: broker:29092
+      MLFLOW_URI: ${MLFLOW_URI}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    networks:
+      - kafka_default
     command: >
       uvicorn app:app --host 0.0.0.0 --port 80
 
@@ -104,8 +112,8 @@ services:
     ports:
       - "28050:8050"
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
-      - FASTAPI_URI=${FASTAPI_URI}
+      KAFKA_BOOTSTRAP_SERVERS: broker:29092
+      FASTAPI_URI: ${FASTAPI_URI}
     networks:
       - kafka_default
     command: >

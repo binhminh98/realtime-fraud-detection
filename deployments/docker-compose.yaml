@@ -63,7 +63,7 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
       MINIO_STORAGE_USE_HTTPS: false
-    command: server /data --console-address ":29011"
+    command: server /data --console-address ":9001"
     volumes:
       - /home/mlai18/minio/data:/data
 

@@ -6,8 +6,6 @@ from fastapi import APIRouter, BackgroundTasks, status
 from fastapi.responses import JSONResponse
 from services.producer_services import ProducerService
 
-router = APIRouter()
-
 router = APIRouter(
     prefix="/producers",
     tags=["producers"],

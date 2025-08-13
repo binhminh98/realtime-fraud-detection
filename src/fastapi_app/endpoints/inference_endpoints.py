@@ -4,11 +4,8 @@ Module to specify inference endpoints for fraud detection ML models.
 
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
-from services.inference_services import InferenceServices
-
 from models.models import Transaction
-
-router = APIRouter()
+from services.inference_services import InferenceServices
 
 router = APIRouter(
     prefix="/inference",

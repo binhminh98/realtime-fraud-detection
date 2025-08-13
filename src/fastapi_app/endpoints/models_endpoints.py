@@ -6,8 +6,6 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from services.models_services import ModelServices
 
-router = APIRouter()
-
 router = APIRouter(
     prefix="/models",
     tags=["models"],
